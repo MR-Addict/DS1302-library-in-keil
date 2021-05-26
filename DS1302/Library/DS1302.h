@@ -3,85 +3,86 @@ sbit DS1302_CK = P3^5;
 sbit DS1302_IO = P3^4;
 
 struct Time{
-	uint32_t year;	//ÉèÖÃÄê
-	uint8_t mon;	//ÉèÖÃÔÂ
-	uint8_t date;	//ÉèÖÃÈÕ
-	uint8_t hour;	//ÉèÖÃĞ¡Ê±
-	uint8_t min;	//ÉèÖÃ·ÖÖÓ
-	uint8_t sec;	//ÉèÖÃÃë
-	uint8_t day;	//ÉèÖÃĞÇÆÚ
+	uint32_t year;	//è®¾ç½®å¹´
+	uint8_t mon;	//è®¾ç½®æœˆ
+	uint8_t date;	//è®¾ç½®æ—¥
+	uint8_t hour;	//è®¾ç½®å°æ—¶
+	uint8_t min;	//è®¾ç½®åˆ†é’Ÿ
+	uint8_t sec;	//è®¾ç½®ç§’
+	uint8_t day;	//è®¾ç½®æ˜ŸæœŸ
 };
 
 void DS1302_Byte_Write(uint8_t Data){
 	uint8_t Mask;
-	for(Mask = 0x01;Mask != 0;Mask << 1){	//µÍÎ»ÔÚÇ°£¬Öğ½¥Ïòºó
-		if((Mask & Data) != 0)	//Ê×ÏÈÊä³ö¸ÃÊı¾İ
+	for(Mask = 0x01;Mask != 0;Mask <<= 1){	//ä½ä½åœ¨å‰ï¼Œé€æ¸å‘å
+		if((Mask & Data) != 0)	//é¦–å…ˆè¾“å‡ºè¯¥æ•°æ®
 			DS1302_IO = 1;
 		else
 			DS1302_IO =0;
-		DS1302_CK =1;	//À­¸ßÊ±ÖÓ
-		DS1302_CK =0;	//À­µÍÊ±ÖÓ£¬Íê³ÉÒ»Î»²Ù×÷
+		DS1302_CK =1;	//æ‹‰é«˜æ—¶é’Ÿ
+		DS1302_CK =0;	//æ‹‰ä½æ—¶é’Ÿï¼Œå®Œæˆä¸€ä½æ“ä½œ
 	}
-	DS1302_IO = 1;	//×îºóÊÍ·ÅIO¿Ú
+	DS1302_IO = 1;	//æœ€åé‡Šæ”¾IOå£
 }
 
 uint8_t DS1302_Byte_Read(){
 	uint8_t Mask;
 	uint8_t Data = 0;
-	for(Mask = 0x01;Mask != 0;Mask << 1){	//µÍÎ»ÔÚÇ°£¬Öğ½¥Ïòºó
-		if(DS1302_IO != 0)	//Ê×ÏÈÊä³ö¸ÃÊı¾İ£¬²¢ÉèÖÃÔÚdataÎ»
+	for(Mask = 0x01;Mask != 0;Mask <<= 1){	//ä½ä½åœ¨å‰ï¼Œé€æ¸å‘å
+		if(DS1302_IO != 0)	//é¦–å…ˆè¾“å‡ºè¯¥æ•°æ®ï¼Œå¹¶è®¾ç½®åœ¨dataä½
 			Data |= Mask;
-		DS1302_CK =1;	//À­¸ßÊ±ÖÓ
-		DS1302_CK =0;	//À­µÍÊ±ÖÓ£¬Íê³ÉÒ»Î»²Ù×÷
+		DS1302_CK =1;	//æ‹‰é«˜æ—¶é’Ÿ
+		DS1302_CK =0;	//æ‹‰ä½æ—¶é’Ÿï¼Œå®Œæˆä¸€ä½æ“ä½œ
 	}
 	return Data;
 }
 
-//Ïò¼Ä´æÆ÷Ğ´Ò»¸ö×Ö½ÚµÄÊı¾İ
+//å‘å¯„å­˜å™¨å†™ä¸€ä¸ªå­—èŠ‚çš„æ•°æ®
 void DS1302_One_Byte_Write(uint8_t reg,uint8_t Data){
-	DS1302_CE = 1;	//Ñ¡Æ¬Ê¹ÄÜ
-	DS1302_Byte_Write((reg << 1) | 0x80);	//·¢ËÍ¼Ä´æÆ÷Ö¸Áî
-	DS1302_Byte_Write(Data);	//Ğ´Èë¼Ä´æÆ÷Ò»¸ö×Ö½ÚµÄÊı¾İ
-	DS1302_CE = 0;	//Ñ¡Æ¬¹Ø±ÕÊ¹ÄÜ
+	DS1302_CE = 1;	//é€‰ç‰‡ä½¿èƒ½
+	DS1302_Byte_Write((reg << 1) | 0x80);	//å‘é€å¯„å­˜å™¨æŒ‡ä»¤
+	DS1302_Byte_Write(Data);	//å†™å…¥å¯„å­˜å™¨ä¸€ä¸ªå­—èŠ‚çš„æ•°æ®
+	DS1302_CE = 0;	//é€‰ç‰‡å…³é—­ä½¿èƒ½
 }
 
 uint8_t DS1302_One_Byte_Read(uint8_t reg){
 	uint8_t Data;
-	DS1302_CE = 1;	//Ñ¡Æ¬Ê¹ÄÜ
-	DS1302_Byte_Write((reg << 1) | 0x81);	//·¢ËÍ¼Ä´æÆ÷Ö¸Áî
-	Data = DS1302_Byte_Read();	//¶ÁÈ¡¼Ä´æÆ÷Ò»¸ö×Ö½ÚµÄÊı¾İ
-	DS1302_CE = 0;	//Ñ¡Æ¬¹Ø±ÕÊ¹ÄÜ
+	DS1302_CE = 1;	//é€‰ç‰‡ä½¿èƒ½
+	DS1302_Byte_Write((reg << 1) | 0x81);	//å‘é€å¯„å­˜å™¨æŒ‡ä»¤
+	Data = DS1302_Byte_Read();	//è¯»å–å¯„å­˜å™¨ä¸€ä¸ªå­—èŠ‚çš„æ•°æ®
+	DS1302_CE = 0;	//é€‰ç‰‡å…³é—­ä½¿èƒ½
 	return Data;
 }
 
-//Ê¹ÓÃÍ»·¢Ä£Ê½Á¬ĞøĞ´Èë8¸ö¼Ä´æÆ÷Êı¾İ
+//ä½¿ç”¨çªå‘æ¨¡å¼è¿ç»­å†™å…¥8ä¸ªå¯„å­˜å™¨æ•°æ®
 void DS1302_Burst_Write(uint8_t *Data){
 	uint8_t i;
 	
 	DS1302_CE = 1;
-	DS1302_Byte_Write(0xbe);	//·¢ËÍÍ»·¢Ğ´¼Ä´æÆ÷Ö¸Áî
-	for(i = 0;i < 8;i++){	//Á¬ĞøĞ´Èë8¸ö×Ö½ÚµÄÊı¾İ
+	DS1302_Byte_Write(0xbe);	//å‘é€çªå‘å†™å¯„å­˜å™¨æŒ‡ä»¤
+	for(i = 0;i < 8;i++){	//è¿ç»­å†™å…¥8ä¸ªå­—èŠ‚çš„æ•°æ®
 		DS1302_Byte_Write(Data[i]);
 	}
 	DS1302_CE = 0;
 }
 
-//Ê¹ÓÃÍ»·¢Ä£Ê½Á¬Ğø¶ÁÈ¡8¸ö¼Ä´æÆ÷Êı¾İ
+//ä½¿ç”¨çªå‘æ¨¡å¼è¿ç»­è¯»å–8ä¸ªå¯„å­˜å™¨æ•°æ®
 void DS1302_Burst_Read(uint8_t *Data){
 	uint8_t i;
 	
 	DS1302_CE = 1;
-	DS1302_Byte_Write(0xbe);	//·¢ËÍÍ»·¢¶Á¼Ä´æÆ÷Ö¸Áî
-	for(i = 0;i < 8;i++){	//Á¬Ğø¶ÁÈ¡8¸ö×Ö½ÚµÄÊı¾İ
+	DS1302_Byte_Write(0xbf);	//å‘é€çªå‘è¯»å¯„å­˜å™¨æŒ‡ä»¤
+	for(i = 0;i < 8;i++){	//è¿ç»­è¯»å–8ä¸ªå­—èŠ‚çš„æ•°æ®
 		Data[i] = DS1302_Byte_Read();
 	}
 	DS1302_CE = 0;
 }
 
-//»ñÈ¡ÊµÊ±Ê±¼ä
+//è·å–å®æ—¶æ—¶é—´
 void DS1302_Get_Time(struct Time *time){
 	uint8_t buf[8];
 	
+	DS1302_Burst_Read(buf);
 	time -> year = buf[6] + 0x2000;
 	time -> mon = buf[4];
 	time -> date = buf[3];
@@ -91,8 +92,8 @@ void DS1302_Get_Time(struct Time *time){
 	time -> day = buf[5];
 }
 
-//ÉèÖÃÊµÊ±Ê±¼ä
-void DS1302_Set_Real_Time(struct Time *time){
+//è®¾ç½®å®æ—¶æ—¶é—´
+void DS1302_Set_Time(struct Time *time){
 	uint8_t buf[8];
 	
 	buf[7] = 0;
@@ -107,18 +108,18 @@ void DS1302_Set_Real_Time(struct Time *time){
 	DS1302_Burst_Write(buf);
 }
 
-//DS1302³õÊ¼»¯£¬Èç·¢ÉúµôµçÔòÖØĞÂÉèÖÃ³õÊ¼Ê±¼ä
+//DS1302åˆå§‹åŒ–ï¼Œå¦‚å‘ç”Ÿæ‰ç”µåˆ™é‡æ–°è®¾ç½®åˆå§‹æ—¶é—´
 void DS1302_Init(){
 	uint8_t Data;
-	struct Time code Init_Time[] = {	//2021Äê5ÔÂ25ÈÕ 12£º30£º00 ĞÇÆÚ¶ş
-		0x2021,0x05,0x25,0x12,0x30,0x00,0x02
+	struct Time code Init_Time[] = {	//2021å¹´5æœˆ25æ—¥ 12ï¼š30ï¼š00 æ˜ŸæœŸäºŒ
+		0x2021,0x05,0x25,0x15,0x12,0x00,0x03
 	};
 	
-	DS1302_CE = 0;	//³õÊ¼»¯DS1302Í¨ĞÅÒı½Å
+	DS1302_CE = 0;	//åˆå§‹åŒ–DS1302é€šä¿¡å¼•è„š
 	DS1302_CK = 0;
-	Data = DS1302_One_Byte_Read(0);	//¶ÁÈ¡Ãë¼Ä´æÆ÷
-	if((Data & 0x80) != 0){	//ÓÉÃë¼Ä´æÆ÷×î¸ßÎ»CHµÄÖµ£¬ÅĞ¶ÏDS1302ÊÇ·ñÒÑ¾­Í£Ö¹
-		DS1302_One_Byte_Write(7,0x00);	//³·ÏúĞ´±£»¤ÔÊĞíĞ´²Ù×÷
-		DS1302_Set_Real_Time(&Init_Time);	//ÉèÖÃDS1302ÎªÄ¬ÈÏÊ±¼ä
+	Data = DS1302_One_Byte_Read(0);	//è¯»å–ç§’å¯„å­˜å™¨
+	if((Data & 0x80) != 0){	//ç”±ç§’å¯„å­˜å™¨æœ€é«˜ä½CHçš„å€¼ï¼Œåˆ¤æ–­DS1302æ˜¯å¦å·²ç»åœæ­¢
+		DS1302_One_Byte_Write(7,0x00);	//æ’¤é”€å†™ä¿æŠ¤å…è®¸å†™æ“ä½œ
+		DS1302_Set_Time(&Init_Time);	//è®¾ç½®DS1302ä¸ºé»˜è®¤æ—¶é—´
 	}
 }
