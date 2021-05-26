@@ -7,39 +7,33 @@ void Config_Timer0(uint32_t ms);
 void Refresh_Time();
 void Show_BCD_One_Byte(uint8_t bcd);
 
-bit flag200ms = 1;	//200ms¶¨Ê±±êÖ¾
-struct Time Buf_Time;		//ÈÕÆÚÊ±¼ä»º³åÇø
-uint8_t Set_Index = 0;	//Ê±¼äÉèÖÃË÷Òı
-uint8_t T0RH = 0;	//T0ÖØÔØÖµ¸ß×Ö½Ú
-uint8_t T0RL = 0;	//T0ÖØÔØÖµµÍ×Ö½Ú
+struct Time code Set_Time[] = {
+		0x2021,0x05,0x26,0x15,0x18,0x00,0x03
+	};
+struct Time Buf_Time;		//æ—¥æœŸæ—¶é—´ç¼“å†²åŒº
+uint8_t T0RH = 0;	//T0é‡è½½å€¼é«˜å­—èŠ‚
+uint8_t T0RL = 0;	//T0é‡è½½å€¼ä½å­—èŠ‚
 
 void main(){
 	uint8_t Preserve_Sec =0xaa;
 	
-	EA = 1;
-	Config_Timer0(1);
-	DS1302_Init();
+	Config_Timer0(20);	//æ—¶é’Ÿé¢‘ç‡è®¾ç½®ä¸º20ms
+	DS1302_Init();	//åˆå§‹åŒ–DS1302ï¼Œå½“ç³»ç»Ÿæ‰ç”µåä¼šè¿›è¡Œæ£€æŸ¥ï¼Œå¦‚æœæ‰ç”µåˆ™è®¾ç½®åˆå§‹æ—¶é—´
+	DS1302_Set_Time(&Set_Time);	//è®¾ç½®æ—¶é—´
 	LCD_Init();
 	
 	LCD_Set_Cursor(0,3);
-	LCD_Print_Str("20 - - ");
-	LCD_Set_Cursor(1,4);
-	LCD_Print_Str(" : : ");
-	
-	while(1){
-		if(flag200ms && (Set_Index == 0)){
-			flag200ms = 0;
-			DS1302_Get_Time(&Buf_Time);
-			if(Preserve_Sec != Buf_Time.sec){
-				Refresh_Time();
-				Preserve_Sec = Buf_Time.sec;
-			}
-		}
-	}
+	LCD_Print_Str("20  -  -");
+	LCD_Set_Cursor(1,6);
+	LCD_Print_Str(":  :");
+	DS1302_Get_Time(&Buf_Time);
+	Refresh_Time();
+	while(1);
 }
 
 void Config_Timer0(uint32_t ms){
 	uint64_t temp;
+	EA = 1;
 	
 	temp = 11059200/12;
 	temp = (temp * ms) / 1000;
@@ -47,16 +41,16 @@ void Config_Timer0(uint32_t ms){
 	temp = temp + 28;
 	T0RH = (uint8_t)(temp >> 8);
 	T0RL = (uint8_t)temp;
-	TMOD &= 0xf0;	//ÇåÁãT0¿ØÖÆÎ»
-	TMOD |=  0x01;	//ÅäÖÃT0ÎªÄ£Ê½1
-	TH0 = T0RH;	//¼ÓÔØT0ÖØÔØÖµ
+	TMOD &= 0xf0;	//æ¸…é›¶T0æ§åˆ¶ä½
+	TMOD |=  0x01;	//é…ç½®T0ä¸ºæ¨¡å¼1
+	TH0 = T0RH;	//åŠ è½½T0é‡è½½å€¼
 	TL0 = T0RL;	
-	ET0 = 1;	//Ê¹ÄÜT0ÖĞ¶Ï
-	TR0 = 1;	//Æô¶¯T0
+	ET0 = 1;	//ä½¿èƒ½T0ä¸­æ–­
+	TR0 = 1;	//å¯åŠ¨T0
 }
 
 void Show_BCD_One_Byte(uint8_t bcd){
-	uint8_t str[4];
+	uint8_t str[3];
 	
 	str[0] = (bcd >> 4) + '0';
 	str[1] = (bcd & 0x0f) + '0';
@@ -78,4 +72,21 @@ void Refresh_Time(){
 	Show_BCD_One_Byte(Buf_Time.min);
 	LCD_Set_Cursor(1,10);
 	Show_BCD_One_Byte(Buf_Time.sec);
+}
+
+void Interrupt0() interrupt 1{
+	static uint8_t Preserved_Sec = 0;
+	static uint8_t count = 0;
+	
+	TH0 = T0RH;
+	TL0 = T0RL;
+	count++;
+	if(count>=10){	//20*10=200ï¼Œæ¯ç§’5æ¬¡å¯¹ç§’æ•°è¿›è¡Œæ£€æŸ¥
+		count = 0;
+		DS1302_Get_Time(&Buf_Time);
+		if(Preserved_Sec != Buf_Time.sec){
+			Refresh_Time();
+			Preserved_Sec = Buf_Time.sec;
+		}
+	}
 }
